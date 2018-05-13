@@ -108,17 +108,19 @@ function echo_install_list(){
 --------------------------------------------------------------------------------------------------
 安装Websocks:
 	0.清除Caddy
-	1.Websocks+TLS+网站伪装
+	1.Websocks+TLS
+	2.Websocks+TLS+网站反代
+	3.Websocks+TLS+网站伪装
 --------------------------------------------------------------------------------------------------
 Websocks当前运行状态：${websocks_status}
 Caddy当前运行状态：${caddy_status}
-	2.更新脚本
-	3.更新程序
-	4.卸载程序
+	4.更新脚本
+	5.更新程序
+	6.卸载程序
 
-	5.启动程序
-	6.关闭程序
-	7.重启程序
+	7.启动程序
+	8.关闭程序
+	9.重启程序
 --------------------------------------------------------------------------------------------------
 客户端运行指令：${websocks_start_command}
 --------------------------------------------------------------------------------------------------"
@@ -131,7 +133,7 @@ Caddy当前运行状态：${caddy_status}
 		clear
 		echo -e "${error_font}请输入正确的序号！"
 		exit 1
-	elif [[ ${determine_type} -gt 7 ]]; then
+	elif [[ ${determine_type} -gt 9 ]]; then
 		clear
 		echo -e "${error_font}请输入正确的序号！"
 		exit 1
@@ -145,22 +147,22 @@ function data_processing(){
 	echo -e "正在处理请求中..."
 	if [[ ${determine_type} = "0" ]]; then
 		uninstall_old
-	elif [[ ${determine_type} = "2" ]]; then
+	elif [[ ${determine_type} = "4" ]]; then
 		upgrade_shell_script
-	elif [[ ${determine_type} = "3" ]]; then
+	elif [[ ${determine_type} = "5" ]]; then
 		prevent_uninstall_check
 		upgrade_program
 		restart_service
-	elif [[ ${determine_type} = "4" ]]; then
-		prevent_uninstall_check
-		uninstall_program
-	elif [[ ${determine_type} = "5" ]]; then
-		prevent_uninstall_check
-		start_service
 	elif [[ ${determine_type} = "6" ]]; then
 		prevent_uninstall_check
-		stop_service
+		uninstall_program
 	elif [[ ${determine_type} = "7" ]]; then
+		prevent_uninstall_check
+		start_service
+	elif [[ ${determine_type} = "8" ]]; then
+		prevent_uninstall_check
+		stop_service
+	elif [[ ${determine_type} = "9" ]]; then
 		prevent_uninstall_check
 		restart_service
 	else
@@ -170,7 +172,6 @@ function data_processing(){
 		generate_base_config
 		clear
 		echo -e "安装Websocks主程序中..."
-		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
 		mkdir /usr/local/websocks
 		if [[ $? -eq 0 ]];then
 			clear
@@ -191,6 +192,7 @@ function data_processing(){
 			clear_install
 			exit 1
 		fi
+		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
 		wget https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
 		if [[ $? -eq 0 ]];then
 			clear
@@ -262,19 +264,220 @@ function data_processing(){
 			exit 1
 		fi
 		echo -e "${ok_font}Websocks安装成功。"
-		if [[ ${determine_type} = "1" ]]; then
+		clear
+		echo -e "正在安装acme.sh中..."
+		curl https://get.acme.sh | sh
+		if [[ $? -eq 0 ]];then
 			clear
-			echo -e "正在安装acme.sh中..."
-			curl https://get.acme.sh | sh
-			if [[ $? -eq 0 ]];then
+			echo -e "${ok_font}acme.sh 安装成功。"
+		else
+			clear
+			echo -e "${error_font}acme.sh 安装失败，请检查相关依赖是否正确安装。"
+			clear_install
+			exit 1
+		fi
+		elif [[ ${determine_type} = "1" ]]; then
+			install_port="443"
+			check_port
+			clear
+			stty erase '^H' && read -p "请输入您的域名：" install_domain
+			if [[ ${install_domain} = "" ]]; then
 				clear
-				echo -e "${ok_font}acme.sh 安装成功。"
+				echo -e "${error_font}请输入您的域名。"
+				clear_install
+				exit 1
 			else
 				clear
-				echo -e "${error_font}acme.sh 安装失败，请检查相关依赖是否正确安装。"
+				echo -e "正在签发证书中..."
+				bash ~/.acme.sh/acme.sh --issue -d ${install_domain} --standalone -k ec-256 --force
+				if [[ $? -eq 0 ]];then
+					clear
+					echo -e "${ok_font}证书生成成功。"
+					bash ~/.acme.sh/acme.sh --installcert -d ${install_domain} --fullchainpath /usr/local/websocks/websocks.cer --keypath /usr/local/websocks/websocks.key --ecc
+					if [[ $? -eq 0 ]];then
+						clear
+						echo -e "${ok_font}证书配置成功。"
+					else
+						clear
+						echo -e "${error_font}证书配置失败！"
+						clear_install
+						exit 1
+					fi
+				else
+					clear
+					echo -e "${error_font}证书生成失败！"
+					clear_install
+					exit 1
+				fi
+				echo "${install_domain}" > /usr/local/websocks/full_domain.txt
+				if [[ $? -eq 0 ]];then
+					clear
+					echo -e "${ok_font}Websocks 域名写入成功。"
+				else
+					clear
+					echo -e "${error_font}Websocks 域名写入失败！"
+					clear_install
+					exit 1
+				fi
+				cat <<-EOF > /etc/systemd/system/websocks.service
+				[Unit]
+				Description=websocks
+				
+				[Service]
+				ExecStart=/usr/local/websocks/websocks server -l :443 -p /fuckgfw_gfwmotherfuckingboom/${UUID} --tls
+				Restart=always
+				  
+				[Install]
+				WantedBy=multi-user.target
+				EOF
+				if [[ $? -eq 0 ]];then
+					clear
+					echo -e "${ok_font}写入Systemd配置成功。"
+				else
+					clear
+					echo -e "${error_font}写入Systemd配置失败！"
+					clear_install
+					exit 1
+				fi
+				systemctl enable websocks.service
+				if [[ $? -eq 0 ]];then
+					clear
+					echo -e "${ok_font}开启自启动成功。"
+				else
+					clear
+					echo -e "${error_font}开启自启动失败！"
+					clear_install
+					exit 1
+				fi
+			fi
+			echo "1" > /usr/local/websocks/install_type.txt
+			if [[ $? -eq 0 ]];then
+				clear
+				echo -e "${ok_font}写入安装信息成功。"
+			else
+				clear
+				echo -e "${error_font}写入安装信息失败！"
 				clear_install
 				exit 1
 			fi
+			cd /root/
+			if [[ $? -eq 0 ]];then
+				clear
+				echo -e "${ok_font}返回root文件夹成功。"
+			else
+				clear
+				echo -e "${error_font}返回root文件夹失败！"
+				clear_install
+				exit 1
+			fi
+			restart_service
+			echo_websocks_config
+		elif [[ ${determine_type} = "2" ]]; then
+			install_port="443"
+			check_port
+			clear
+			stty erase '^H' && read -p "请输入您的域名：" install_domain
+			if [[ ${install_domain} = "" ]]; then
+				clear
+				echo -e "${error_font}请输入您的域名。"
+				clear_install
+				exit 1
+			else
+				clear
+				echo -e "正在签发证书中..."
+				bash ~/.acme.sh/acme.sh --issue -d ${install_domain} --standalone -k ec-256 --force
+				if [[ $? -eq 0 ]];then
+					clear
+					echo -e "${ok_font}证书生成成功。"
+					bash ~/.acme.sh/acme.sh --installcert -d ${install_domain} --fullchainpath /usr/local/websocks/websocks.cer --keypath /usr/local/websocks/websocks.key --ecc
+					if [[ $? -eq 0 ]];then
+						clear
+						echo -e "${ok_font}证书配置成功。"
+					else
+						clear
+						echo -e "${error_font}证书配置失败！"
+						clear_install
+						exit 1
+					fi
+				else
+					clear
+					echo -e "${error_font}证书生成失败！"
+					clear_install
+					exit 1
+				fi
+				echo "${install_domain}" > /usr/local/websocks/full_domain.txt
+				if [[ $? -eq 0 ]];then
+					clear
+					echo -e "${ok_font}Websocks 域名写入成功。"
+				else
+					clear
+					echo -e "${error_font}Websocks 域名写入失败！"
+					clear_install
+					exit 1
+				fi
+				stty erase '^H' && read -p "请输入欲反代的域名（请加上协议头，例如 https://www.centos.org/ ）：" proxy_domain
+				if [[ ${install_domain} = "" ]]; then
+					clear
+					echo -e "${error_font}请输入欲反代的域名！"
+					clear_install
+					exit 1
+				fi
+				cat <<-EOF > /etc/systemd/system/websocks.service
+				[Unit]
+				Description=websocks
+				
+				[Service]
+				ExecStart=/usr/local/websocks/websocks server -l :443 -p /fuckgfw_gfwmotherfuckingboom/${UUID} --proxy ${proxy_domain} --tls
+				Restart=always
+				  
+				[Install]
+				WantedBy=multi-user.target
+				EOF
+				if [[ $? -eq 0 ]];then
+					clear
+					echo -e "${ok_font}写入Systemd配置成功。"
+				else
+					clear
+					echo -e "${error_font}写入Systemd配置失败！"
+					clear_install
+					exit 1
+				fi
+				systemctl enable websocks.service
+				if [[ $? -eq 0 ]];then
+					clear
+					echo -e "${ok_font}开启自启动成功。"
+				else
+					clear
+					echo -e "${error_font}开启自启动失败！"
+					clear_install
+					exit 1
+				fi
+			fi
+			echo "2" > /usr/local/websocks/install_type.txt
+			if [[ $? -eq 0 ]];then
+				clear
+				echo -e "${ok_font}写入安装信息成功。"
+			else
+				clear
+				echo -e "${error_font}写入安装信息失败！"
+				clear_install
+				exit 1
+			fi
+			cd /root/
+			if [[ $? -eq 0 ]];then
+				clear
+				echo -e "${ok_font}返回root文件夹成功。"
+			else
+				clear
+				echo -e "${error_font}返回root文件夹失败！"
+				clear_install
+				exit 1
+			fi
+			restart_service
+			echo_websocks_config
+		elif [[ ${determine_type} = "3" ]]; then
+			clear
+			echo -e "正在安装Caddy中..."
 			bash <(curl https://raw.githubusercontent.com/ToyoDAdoubi/doubi/master/caddy_install.sh)
 			if [[ $? -eq 0 ]];then
 				clear
@@ -468,7 +671,7 @@ function data_processing(){
 					exit 1
 				fi
 			fi
-			echo "1" > /usr/local/websocks/install_type.txt
+			echo "3" > /usr/local/websocks/install_type.txt
 			if [[ $? -eq 0 ]];then
 				clear
 				echo -e "${ok_font}写入安装信息成功。"
@@ -649,7 +852,7 @@ function prevent_install_check(){
 			echo -e "${error_font}您已经安装过了，请勿再次安装，若您需要切换至其他模式，请先卸载后再使用安装功能。"
 			exit 1
 		elif [[ ${websocks_status} = "${red_fontcolor}未安装${default_fontcolor}" ]]; then
-			if [[ ${determine_type} -lt 8 ]]; then
+			if [[ ${determine_type} -lt 3 ]]; then
 				echo -e "${ok_font}检测完毕，符合要求，正在执行命令中..."
 			else
 				if [[ ${caddy_status} = "${red_fontcolor}未安装${default_fontcolor}" ]]; then
@@ -955,6 +1158,23 @@ function open_port(){
 
 function echo_websocks_config(){
 	if [[ ${determine_type} = "1" ]]; then
+		clear
+		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID}" 
+		echo -e "您的连接信息如下："
+		echo -e "WSS地址：${install_domain}"
+		echo -e "端口(Port)：${install_port}"
+		echo -e "WSS目录：/fuckgfw_gfwmotherfuckingboom/${UUID}"
+		echo -e "客户端运行指令：${green_backgroundcolor}${run_command}${default_fontcolor}"
+	elif [[ ${determine_type} = "2" ]]; then
+		clear
+		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID} -n ${proxy_domain} --insecure" 
+		echo -e "您的连接信息如下："
+		echo -e "WSS地址：${install_domain}"
+		echo -e "端口(Port)：${install_port}"
+		echo -e "WSS目录：/fuckgfw_gfwmotherfuckingboom/${UUID}"
+		echo -e "伪装域名：${proxy_domain}"
+		echo -e "客户端运行指令：${green_backgroundcolor}${run_command}${default_fontcolor}"
+	elif [[ ${determine_type} = "3" ]]; then
 		clear
 		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID}" 
 		echo -e "您的连接信息如下："
