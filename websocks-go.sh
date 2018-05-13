@@ -253,7 +253,7 @@ function data_processing(){
 			clear_install
 			exit 1
 		fi
-		chmod 700 websocks
+		chmod +x websocks
 		if [[ $? -eq 0 ]];then
 			clear
 			echo -e "${ok_font}设定Websocks权限成功。"
@@ -293,7 +293,7 @@ function data_processing(){
 				if [[ $? -eq 0 ]];then
 					clear
 					echo -e "${ok_font}证书生成成功。"
-					bash ~/.acme.sh/acme.sh --installcert -d ${install_domain} --fullchainpath /usr/local/websocks/websocks.cer --keypath /usr/local/websocks/websocks.key --ecc
+					bash ~/.acme.sh/acme.sh --installcert -d ${install_domain} --fullchainpath /usr/local/websocks/pem.pem --keypath /usr/local/websocks/key.key --ecc
 					if [[ $? -eq 0 ]];then
 						clear
 						echo -e "${ok_font}证书配置成功。"
@@ -324,7 +324,7 @@ function data_processing(){
 				Description=websocks
 				
 				[Service]
-				ExecStart=/usr/local/websocks/websocks server -l :443 -p /fuckgfw_gfwmotherfuckingboom/${UUID} --tls
+				ExecStart=/usr/local/websocks/websocks server -l :443 -p /fuckgfw_gfwmotherfuckingboom/${UUID} --tls -cert /usr/local/websocks/pem.pem -key /usr/local/websocks/key.key
 				Restart=always
 				  
 				[Install]
@@ -389,7 +389,7 @@ function data_processing(){
 				if [[ $? -eq 0 ]];then
 					clear
 					echo -e "${ok_font}证书生成成功。"
-					bash ~/.acme.sh/acme.sh --installcert -d ${install_domain} --fullchainpath /usr/local/websocks/websocks.cer --keypath /usr/local/websocks/websocks.key --ecc
+					bash ~/.acme.sh/acme.sh --installcert -d ${install_domain} --fullchainpath /usr/local/websocks/pem.pem --keypath /usr/local/websocks/key.key --ecc
 					if [[ $? -eq 0 ]];then
 						clear
 						echo -e "${ok_font}证书配置成功。"
@@ -427,7 +427,7 @@ function data_processing(){
 				Description=websocks
 				
 				[Service]
-				ExecStart=/usr/local/websocks/websocks server -l :443 -p /fuckgfw_gfwmotherfuckingboom/${UUID} --proxy ${proxy_domain} --tls
+				ExecStart=/usr/local/websocks/websocks server -l :443 -p /fuckgfw_gfwmotherfuckingboom/${UUID} --proxy ${proxy_domain} --tls -cert /usr/local/websocks/pem.pem -key /usr/local/websocks/key.key
 				Restart=always
 				  
 				[Install]
@@ -759,7 +759,7 @@ function start_service(){
 	clear
 	echo -e "正在启动服务中..."
 	install_type=$(cat /usr/local/websocks/install_type.txt)
-	if [ "${install_type}" -eq "1" ]; then
+	if [ "${install_type}" -eq "3" ]; then
 		if [[ ${websocks_pid} -eq 0 ]]; then
 			service websocks start
 			if [[ $? -eq 0 ]];then
@@ -786,6 +786,20 @@ function start_service(){
 			echo -e "${error_font}Caddy 正在运行。"
 			exit 1
 		fi
+	else
+		if [[ ${websocks_pid} -eq 0 ]]; then
+			service websocks start
+			if [[ $? -eq 0 ]];then
+				clear
+				echo -e "${ok_font}Websocks 启动成功。"
+			else
+				clear
+				echo -e "${error_font}Websocks 启动失败！"
+			fi
+		else
+			clear
+			echo -e "${error_font}Websocks 正在运行。"
+		fi
 	fi
 }
 
@@ -793,7 +807,7 @@ function stop_service(){
 	clear
 	echo -e "正在停止服务中..."
 	install_type=$(cat /usr/local/websocks/install_type.txt)
-	if [ "${install_type}" -eq "1" ]; then
+	if [ "${install_type}" -eq "3" ]; then
 		if [[ ${websocks_pid} -eq 0 ]]; then
 			clear
 			echo -e "${error_font}Websocks 未在运行。"
@@ -819,6 +833,20 @@ function stop_service(){
 				exit 1
 			fi
 		fi
+	else
+		if [[ ${websocks_pid} -eq 0 ]]; then
+			clear
+			echo -e "${error_font}Websocks 未在运行。"
+		else
+			service websocks stop
+			if [[ $? -eq 0 ]];then
+				clear
+				echo -e "${ok_font}Websocks 停止成功。"
+			else
+				clear
+				echo -e "${error_font}Websocks 停止失败！"
+			fi
+		fi
 	fi
 }
 
@@ -826,7 +854,7 @@ function restart_service(){
 	clear
 	echo -e "正在重启服务中..."
 	install_type=$(cat /usr/local/websocks/install_type.txt)
-	if [ "${install_type}" -eq "1" ]; then
+	if [ "${install_type}" -eq "3" ]; then
 		service websocks restart
 		if [[ $? -eq 0 ]];then
 			clear
@@ -840,6 +868,15 @@ function restart_service(){
 			echo -e "${ok_font}Caddy 重启成功。"
 		else
 			echo -e "${error_font}Caddy 重启失败！"
+		fi
+	else
+		service websocks restart
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}Websocks 重启成功。"
+		else
+			clear
+			echo -e "${error_font}Websocks 重启失败！"
 		fi
 	fi
 }
@@ -873,7 +910,7 @@ function uninstall_program(){
 	clear
 	echo -e "正在卸载中..."
 	install_type=$(cat /usr/local/websocks/install_type.txt)
-	if [[ "${install_type}" -eq "1" ]]; then
+	if [[ "${install_type}" -eq "3" ]]; then
 		full_domain=$(cat /usr/local/websocks/full_domain.txt)
 		bash ~/.acme.sh/acme.sh --revoke -d ${full_domain} --ecc
 		bash ~/.acme.sh/acme.sh --remove -d ${full_domain} --ecc
@@ -907,6 +944,30 @@ function uninstall_program(){
 		else
 			echo -e "${error_font}Caddy卸载失败！"
 		fi
+	else
+		full_domain=$(cat /usr/local/websocks/full_domain.txt)
+		bash ~/.acme.sh/acme.sh --revoke -d ${full_domain} --ecc
+		bash ~/.acme.sh/acme.sh --remove -d ${full_domain} --ecc
+		rm -rf ~/.acme.sh
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}Acme卸载成功。"
+		else
+			clear
+			echo -e "${error_font}Acme卸载失败！"
+		fi
+		service websocks stop
+		systemctl disable websocks.service
+		rm -rf /etc/systemd/system/websocks.service
+		update-rc.d -f websocks remove
+		rm -rf /usr/local/websocks
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}Websocks卸载成功。"
+		else
+			clear
+			echo -e "${error_font}Websocks卸载失败！"
+		fi
 	fi
 }
 
@@ -914,7 +975,7 @@ function upgrade_program(){
 	clear
 	echo -e "正在更新程序中..."
 	install_type=$(cat /usr/local/websocks/install_type.txt)
-	if [ "${install_type}" -eq "1" ]; then
+	if [ "${install_type}" -eq "3" ]; then
 		cd /usr/local/websocks
 		if [[ $? -eq 0 ]];then
 			clear
@@ -933,6 +994,7 @@ function upgrade_program(){
 			echo -e "${error_font}备份旧文件失败！"
 			exit 1
 		fi
+		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
 		wget https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
 		if [[ $? -eq 0 ]];then
 			clear
@@ -996,7 +1058,7 @@ function upgrade_program(){
 			echo -e "${error_font}删除无用文件失败！"
 			exit 1
 		fi
-		chmod 700 websocks
+		chmod +x websocks
 		if [[ $? -eq 0 ]];then
 			clear
 			echo -e "${ok_font}设定Websocks权限成功。"
@@ -1012,13 +1074,106 @@ function upgrade_program(){
 		else
 			echo -e "${error_font}Caddy 更新失败！"
 		fi
+	else
+		cd /usr/local/websocks
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}进入文件夹成功。"
+		else
+			clear
+			echo -e "${error_font}进入文件夹失败！"
+			exit 1
+		fi
+		mv websocks websocks.bak
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}备份旧文件成功。"
+		else
+			clear
+			echo -e "${error_font}备份旧文件失败！"
+			exit 1
+		fi
+		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
+		wget https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}Websocks下载成功。"
+			rm -rf websocks.bak
+			if [[ $? -eq 0 ]];then
+				clear
+				echo -e "${ok_font}删除备份文件成功。"
+			else
+				clear
+				echo -e "${error_font}删除备份文件失败！"
+				exit 1
+			fi
+		else
+			clear
+			echo -e "${error_font}Websocks下载失败！"
+			mv websocks.bak websocks
+			if [[ $? -eq 0 ]];then
+				clear
+				echo -e "${ok_font}恢复备份文件成功。"
+			else
+				clear
+				echo -e "${error_font}恢复备份文件失败！"
+				exit 1
+			fi
+			exit 1
+		fi
+		tar -xzf websocks_Linux_${system_bit}.tar.gz
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}Websocks解压成功。"
+		else
+			clear
+			echo -e "${error_font}Websocks解压失败！"
+			exit 1
+		fi
+		rm -rf LICENSE
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}删除无用文件成功。"
+		else
+			clear
+			echo -e "${error_font}删除无用文件失败！"
+			exit 1
+		fi
+		rm -rf README.md
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}删除无用文件成功。"
+		else
+			clear
+			echo -e "${error_font}删除无用文件失败！"
+			exit 1
+		fi
+		rm -rf README-zh.md
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}删除无用文件成功。"
+		else
+			clear
+			echo -e "${error_font}删除无用文件失败！"
+			exit 1
+		fi
+		chmod +x websocks
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}设定Websocks权限成功。"
+		else
+			clear
+			echo -e "${error_font}设定Websocks权限失败！"
+			exit 1
+		fi
+		echo -e "${ok_font}Websocks 更新成功。"
 	fi
 }
 
 function clear_install(){
 	clear
 	echo -e "正在卸载中..."
-	if [ "${determine_type}" -eq "1" ]; then
+	if [ "${determine_type}" -eq "3" ]; then
 		full_domain=$(cat /usr/local/websocks/full_domain.txt)
 		bash ~/.acme.sh/acme.sh --revoke -d ${full_domain} --ecc
 		bash ~/.acme.sh/acme.sh --remove -d ${full_domain} --ecc
@@ -1051,6 +1206,30 @@ function clear_install(){
 			echo -e "${ok_font}Caddy卸载成功。"
 		else
 			echo -e "${error_font}Caddy卸载失败！"
+		fi
+	else
+		full_domain=$(cat /usr/local/websocks/full_domain.txt)
+		bash ~/.acme.sh/acme.sh --revoke -d ${full_domain} --ecc
+		bash ~/.acme.sh/acme.sh --remove -d ${full_domain} --ecc
+		rm -rf ~/.acme.sh
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}Acme卸载成功。"
+		else
+			clear
+			echo -e "${error_font}Acme卸载失败！"
+		fi
+		service websocks stop
+		systemctl disable websocks.service
+		rm -rf /etc/systemd/system/websocks.service
+		update-rc.d -f websocks remove
+		rm -rf /usr/local/websocks
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}Websocks卸载成功。"
+		else
+			clear
+			echo -e "${error_font}Websocks卸载失败！"
 		fi
 	fi
 }
