@@ -276,7 +276,7 @@ function data_processing(){
 			clear_install
 			exit 1
 		fi
-		elif [[ ${determine_type} = "1" ]]; then
+		if [[ ${determine_type} = "1" ]]; then
 			install_port="443"
 			check_port
 			clear
