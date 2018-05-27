@@ -1058,6 +1058,15 @@ function upgrade_program(){
 			echo -e "${error_font}删除无用文件失败！"
 			exit 1
 		fi
+		rm -rf websocks_Linux_${system_bit}.tar.gz
+		if [[ $? -eq 0 ]];then
+			clear
+			echo -e "${ok_font}删除无用文件成功。"
+		else
+			clear
+			echo -e "${error_font}删除无用文件失败！"
+			exit 1
+		fi
 		chmod +x websocks
 		if [[ $? -eq 0 ]];then
 			clear
