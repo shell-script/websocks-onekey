@@ -975,7 +975,7 @@ function upgrade_program(){
 	clear
 	echo -e "正在更新程序中..."
 	install_type=$(cat /usr/local/websocks/install_type.txt)
-	if [ "${install_type}" -eq "3" ]; then
+	if [[ "${install_type}" -eq "3" ]]; then
 		cd /usr/local/websocks
 		if [[ $? -eq 0 ]];then
 			clear
@@ -1182,7 +1182,7 @@ function upgrade_program(){
 function clear_install(){
 	clear
 	echo -e "正在卸载中..."
-	if [ "${determine_type}" -eq "3" ]; then
+	if [[ "${determine_type}" -eq "3" ]]; then
 		full_domain=$(cat /usr/local/websocks/full_domain.txt)
 		bash ~/.acme.sh/acme.sh --revoke -d ${full_domain} --ecc
 		bash ~/.acme.sh/acme.sh --remove -d ${full_domain} --ecc
