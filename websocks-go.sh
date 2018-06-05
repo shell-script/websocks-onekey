@@ -1356,7 +1356,7 @@ function open_port(){
 function echo_websocks_config(){
 	if [[ ${determine_type} = "1" ]]; then
 		clear
-		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID}" 
+		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID} --mux" 
 		echo -e "您的连接信息如下："
 		echo -e "WSS地址：${install_domain}"
 		echo -e "端口(Port)：${install_port}"
@@ -1364,7 +1364,7 @@ function echo_websocks_config(){
 		echo -e "客户端运行指令：${green_backgroundcolor}${run_command}${default_fontcolor}"
 	elif [[ ${determine_type} = "2" ]]; then
 		clear
-		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID} -n ${proxy_domain} --insecure" 
+		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID} -n ${proxy_domain} --insecure --mux" 
 		echo -e "您的连接信息如下："
 		echo -e "WSS地址：${install_domain}"
 		echo -e "端口(Port)：${install_port}"
@@ -1373,7 +1373,7 @@ function echo_websocks_config(){
 		echo -e "客户端运行指令：${green_backgroundcolor}${run_command}${default_fontcolor}"
 	elif [[ ${determine_type} = "3" ]]; then
 		clear
-		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID}" 
+		run_command="./websocks client -l 127.0.0.1:1080 -s wss://${install_domain}/fuckgfw_gfwmotherfuckingboom/${UUID} --mux" 
 		echo -e "您的连接信息如下："
 		echo -e "WSS地址：${install_domain}"
 		echo -e "端口(Port)：${install_port}"
