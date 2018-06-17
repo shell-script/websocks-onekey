@@ -193,7 +193,7 @@ function data_processing(){
 			exit 1
 		fi
 		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
-		curl -O https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
+		wget "https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz" -O "websocks_Linux_${system_bit}.tar.gz"
 		if [[ $? -eq 0 ]];then
 			clear
 			echo -e "${ok_font}Websocks下载成功。"
@@ -443,7 +443,7 @@ function data_processing(){
 					exit 1
 				fi
 				stty erase '^H' && read -p "请输入欲反代的域名：" proxy_domain
-				if [[ ${install_domain} = "" ]]; then
+				if [[ ${proxy_domain} = "" ]]; then
 					clear
 					echo -e "${error_font}请输入欲反代的域名！"
 					clear_install
@@ -456,7 +456,7 @@ function data_processing(){
     "TLS": true,
     "CertPath": "/usr/local/websocks/pem.pem",
     "KeyPath": "/usr/local/websocks/key.key",
-    "ReverseProxy": "${install_domain}"
+    "ReverseProxy": "${proxy_domain}"
 }
 				EOF
 				if [[ $? -eq 0 ]];then
@@ -606,7 +606,7 @@ https://${install_domain}
 {
     "ListenAddr": "127.0.0.1:${websocks_listen_port}",
     "Pattern": "/fuckgfw_gfwmotherfuckingboom/${UUID}",
-    "TLS": true,
+    "TLS": false,
     "CertPath": "/usr/local/websocks/pem.pem",
     "KeyPath": "/usr/local/websocks/key.key",
     "ReverseProxy": ""
@@ -671,7 +671,7 @@ https://${install_domain}
 					clear_install
 					exit 1
 				fi
-				curl -O https://github.com/1715173329/websocks-onekey/raw/master/websocks-page.zip
+				wget "https://github.com/1715173329/websocks-onekey/raw/master/websocks-page.zip" -O "websocks-page.zip"
 				if [[ $? -eq 0 ]];then
 					clear
 					echo -e "${ok_font}下载网页文件压缩包成功。"
@@ -1147,7 +1147,7 @@ function upgrade_program(){
 			exit 1
 		fi
 		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
-		curl -O https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
+		wget "https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz" -O "websocks_Linux_${system_bit}.tar.gz"
 		if [[ $? -eq 0 ]];then
 			clear
 			echo -e "${ok_font}Websocks下载成功。"
@@ -1255,7 +1255,7 @@ function upgrade_program(){
 			exit 1
 		fi
 		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
-		curl -O https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
+		wget "https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz" -O "websocks_Linux_${system_bit}.tar.gz"
 		if [[ $? -eq 0 ]];then
 			clear
 			echo -e "${ok_font}Websocks下载成功。"
