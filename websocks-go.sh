@@ -193,7 +193,7 @@ function data_processing(){
 			exit 1
 		fi
 		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
-		wget https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
+		curl -O https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
 		if [[ $? -eq 0 ]];then
 			clear
 			echo -e "${ok_font}Websocks下载成功。"
@@ -1255,7 +1255,7 @@ function upgrade_program(){
 			exit 1
 		fi
 		websocks_ver=$(wget -qO- "https://github.com/lzjluzijie/websocks/tags"|grep "/websocks/releases/tag/"|grep -v '\-apk'|head -n 1|awk -F "/tag/" '{print $2}'|sed 's/\">//')
-		wget https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
+		curl -O https://github.com/lzjluzijie/websocks/releases/download/${websocks_ver}/websocks_Linux_${system_bit}.tar.gz
 		if [[ $? -eq 0 ]];then
 			clear
 			echo -e "${ok_font}Websocks下载成功。"
