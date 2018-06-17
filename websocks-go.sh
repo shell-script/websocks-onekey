@@ -671,7 +671,7 @@ https://${install_domain}
 					clear_install
 					exit 1
 				fi
-				curl -O https://github.com/1715173329/websocks-onekey/blob/master/websocks-page.zip?raw=true
+				curl -O https://github.com/1715173329/websocks-onekey/raw/master/websocks-page.zip
 				if [[ $? -eq 0 ]];then
 					clear
 					echo -e "${ok_font}下载网页文件压缩包成功。"
